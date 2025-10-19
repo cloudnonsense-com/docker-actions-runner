@@ -22,13 +22,21 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     python3-dev \
     python3-pip \
+    gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --no-cache-dir --break-system-packages \
     yq \
     ansible-core==2.17.7 \
     ansible==10.7.0
-    
+
+# Install Terraform from HashiCorp's official repository
+RUN wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com bookworm main" > /etc/apt/sources.list.d/hashicorp.list \
+    && apt-get update \
+    && apt-get install -y terraform \
+    && rm -rf /var/lib/apt/lists/*
+
 # Set working directory
 WORKDIR /actions-runner
 
