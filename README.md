@@ -88,6 +88,7 @@ The runner image comes pre-installed with tools commonly needed for CI/CD workfl
 
 - **Version Control**: git
 - **Shell & Utilities**: bash, curl, wget, jq, less
+- **Text Editors**: vim-tiny, nano
 - **Compression**: tar, gzip, unzip
 - **Programming Languages**:
   - Node.js
@@ -97,6 +98,10 @@ The runner image comes pre-installed with tools commonly needed for CI/CD workfl
 - **Configuration Management**:
   - Ansible (ansible-core 2.17.7)
   - Ansible collections (ansible 10.7.0)
+- **Infrastructure as Code**: Terraform (from HashiCorp repository)
+- **Cloud Tools**:
+  - AWS CLI (awscli)
+  - s3cmd (S3 command-line tool)
 - **Data Processing**: yq (YAML/JSON processor)
 
 These tools enable the runner to handle a wide variety of workflow tasks without requiring additional setup steps.

@@ -58,9 +58,12 @@ The runner uses the GitHub API to obtain a registration token (entrypoint.sh:54-
 The Docker image includes the following tools beyond the standard GitHub Actions runner:
 - **Version Control**: git
 - **Shell utilities**: bash, curl, wget, jq, less
+- **Text editors**: vim-tiny, nano
 - **Compression**: tar, gzip, unzip
 - **Programming**: Node.js, Python 3 (with pip and venv)
 - **Build tools**: build-essential, libssl-dev, libffi-dev
 - **SSH**: openssh-client, sshpass
 - **Configuration Management**: Ansible (ansible-core 2.17.7, ansible 10.7.0)
+- **Infrastructure as Code**: Terraform (from HashiCorp repository)
+- **Cloud tools**: AWS CLI (awscli), s3cmd
 - **Data processing**: yq (YAML/JSON processor)

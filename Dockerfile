@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     wget \
     jq \
     less \
+    vim-tiny \
+    nano \
     git \
     tar \
     gzip \
@@ -23,6 +25,8 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     python3-pip \
     gnupg \
+    s3cmd \
+    awscli \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --no-cache-dir --break-system-packages \
