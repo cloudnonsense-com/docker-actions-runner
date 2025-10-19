@@ -1,0 +1,11 @@
+services:
+  github-runner:
+    build: .
+    container_name: github-actions-runner
+    restart: unless-stopped
+    environment:
+      - GITHUB_ORGANIZATION=${GITHUB_ORGANIZATION}
+      - GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
+      - RUNNER_NAME=${RUNNER_NAME}
+      - RUNNER_LABELS=${RUNNER_LABELS:-self-hosted,Linux,X64}
+    stop_grace_period: 30s
