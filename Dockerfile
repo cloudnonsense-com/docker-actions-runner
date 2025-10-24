@@ -3,6 +3,7 @@ FROM debian:bookworm-slim
 # Install dependencies for GitHub Actions runner
 RUN apt-get update && apt-get install -y \
     bash \
+    procps \
     curl \
     wget \
     jq \

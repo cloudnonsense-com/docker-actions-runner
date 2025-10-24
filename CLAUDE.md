@@ -1,31 +1,68 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when working with this repository.
 
 ## Project Overview
 
-This is a containerized GitHub Actions self-hosted runner designed to run continuously without persistent storage. The runner is built on Debian (bookworm-slim) and uses Docker Compose for deployment.
+Containerized GitHub Actions self-hosted runner on Debian (bookworm-slim) with Docker Compose. Stateless design with automatic lifecycle management.
 
 ## Architecture
 
-**Key Design Decisions:**
-- Runs as root using `RUNNER_ALLOW_RUNASROOT=1` to simplify the setup
-- No persistent storage (no volumes, no mounts, no docker.sock)
-- Signal handling for graceful shutdown and automatic deregistration from GitHub Actions
-- Prevents orphaned runners by deregistering on container termination
+**Key Design:**
+- Runs as root (`RUNNER_ALLOW_RUNASROOT=1`)
+- No persistent storage (no volumes/mounts/docker.sock)
+- Auto-deregisters on shutdown (prevents orphaned runners)
+- Supports org-level and repo-level deployment
+- Signal handling for graceful termination
 
 **Components:**
-1. `Dockerfile` - Debian-based image that downloads the latest GitHub Actions runner at build time
-2. `entrypoint.sh` - Handles runner lifecycle: registration, signal trapping, and deregistration
-3. `compose.yml` - Orchestrates the container with environment variable injection
-4. `.env.example` - Template for required configuration
+1. `Dockerfile` - Downloads latest runner at build time
+2. `entrypoint.sh` - Lifecycle management (registration, signals, deregistration)
+3. `compose.yml` - Container orchestration
+4. `.env.example` - Configuration template
+
+## Deployment Modes
+
+### Organization-Level Runner
+Available to all org repos. Default mode.
+
+**Config:**
+- `RUNNER_SCOPE=org` (or omit)
+- `GITHUB_ORGANIZATION` - org name
+- Token needs `admin:org` scope
+
+**Example:**
+```bash
+RUNNER_SCOPE=org
+GITHUB_ORGANIZATION=my-org
+GITHUB_ACCESS_TOKEN=ghp_xxxxx
+RUNNER_NAME=org-runner-1
+```
+
+### Repository-Level Runner
+Available to single repo only.
+
+**Config:**
+- `RUNNER_SCOPE=repo`
+- `GITHUB_ORGANIZATION` - owner name
+- `GITHUB_REPOSITORY` - repo name
+- Token needs `repo` scope
+
+**Example:**
+```bash
+RUNNER_SCOPE=repo
+GITHUB_ORGANIZATION=my-org
+GITHUB_REPOSITORY=my-repo
+GITHUB_ACCESS_TOKEN=ghp_xxxxx
+RUNNER_NAME=repo-runner-1
+```
 
 ## Building and Running
 
 ```bash
 # Setup environment
 cp .env.example .env
-# Edit .env with your GitHub organization, access token, runner name, and labels
+# Edit .env with your configuration (see Deployment Modes above)
 
 # Build and start
 docker compose up -d --build
@@ -39,31 +76,35 @@ docker compose down
 
 ## Environment Variables
 
-Required variables (defined in `.env`):
-- `GITHUB_ORGANIZATION` - GitHub org name (not the full URL)
-- `GITHUB_ACCESS_TOKEN` - Personal access token with `repo` and `admin:org` scopes
-- `RUNNER_NAME` - Unique identifier for this runner instance
-- `RUNNER_LABELS` - Comma-separated labels (defaults to "self-hosted,Linux,X64")
+**Required (in `.env`):**
+- `RUNNER_SCOPE` - "org" or "repo" (default: "org")
+- `GITHUB_ORGANIZATION` - Org/owner name (no URL)
+- `GITHUB_REPOSITORY` - Repo name (only if `RUNNER_SCOPE=repo`)
+- `GITHUB_ACCESS_TOKEN` - Token (org: `admin:org`, repo: `repo`)
+- `RUNNER_NAME` - Unique runner identifier
+- `RUNNER_LABELS` - Labels (default: "self-hosted,linux,x64")
 
 ## Signal Handling
 
-The entrypoint script (entrypoint.sh:51) traps SIGTERM, SIGINT, SIGQUIT, and SIGHUP to ensure the runner deregisters itself before shutdown. The cleanup function (entrypoint.sh:30-48) obtains a removal token from the GitHub API and calls `config.sh remove --token` to deregister the runner without interactive prompts.
+entrypoint.sh:75 traps SIGTERM/SIGINT/SIGQUIT/SIGHUP for graceful shutdown. Cleanup function (entrypoint.sh:54-72) gets removal token from GitHub API and calls `config.sh remove --token`.
 
 ## GitHub API Integration
 
-The runner uses the GitHub API to obtain a registration token (entrypoint.sh:54-63) before registering with the organization. The access token must have sufficient permissions to manage self-hosted runners.
+**Endpoints by scope:**
+- Org: `/orgs/{org}/actions/runners/...`
+- Repo: `/repos/{owner}/{repo}/actions/runners/...`
+
+entrypoint.sh:36-45 dynamically constructs endpoints and runner URL based on `RUNNER_SCOPE`.
 
 ## Installed Tools
 
-The Docker image includes the following tools beyond the standard GitHub Actions runner:
+Beyond standard runner:
 - **Version Control**: git
-- **Shell utilities**: bash, curl, wget, jq, less
-- **Text editors**: vim-tiny, nano
+- **Shell**: bash, curl, wget, jq, less, vim-tiny, nano
 - **Compression**: tar, gzip, unzip
-- **Programming**: Node.js, Python 3 (with pip and venv)
-- **Build tools**: build-essential, libssl-dev, libffi-dev
+- **Languages**: Node.js, Python 3 (pip, venv)
+- **Build**: build-essential, libssl-dev, libffi-dev
 - **SSH**: openssh-client, sshpass
-- **Configuration Management**: Ansible (ansible-core 2.17.7, ansible 10.7.0)
-- **Infrastructure as Code**: Terraform (from HashiCorp repository)
-- **Cloud tools**: AWS CLI (awscli), s3cmd
-- **Data processing**: yq (YAML/JSON processor)
+- **IaC/Config**: Ansible (2.17.7), Terraform
+- **Cloud**: AWS CLI, s3cmd
+- **Data**: yq

@@ -4,8 +4,10 @@ services:
     container_name: github-actions-runner
     restart: unless-stopped
     environment:
+      - RUNNER_SCOPE=${RUNNER_SCOPE:-org}
       - GITHUB_ORGANIZATION=${GITHUB_ORGANIZATION}
+      - GITHUB_REPOSITORY=${GITHUB_REPOSITORY:-}
       - GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
       - RUNNER_NAME=${RUNNER_NAME}
-      - RUNNER_LABELS=${RUNNER_LABELS:-self-hosted,Linux,X64}
+      - RUNNER_LABELS=${RUNNER_LABELS:-self-hosted,linux,x64}
     stop_grace_period: 30s
